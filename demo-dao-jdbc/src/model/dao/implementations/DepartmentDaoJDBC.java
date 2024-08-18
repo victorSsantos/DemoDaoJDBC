@@ -43,9 +43,7 @@ public class DepartmentDaoJDBC implements DepartmentDao {
             statement = connection.prepareStatement(findAllQuery + " WHERE Id = ?");
             statement.setInt(1, id);
             result = statement.executeQuery();
-
-            if(result.next())
-                department = new Department(result.getInt("Id"), result.getString("Name"));
+            if(result.next()) department = databaseToDepartment(result);
         }
         catch(SQLException e){
             throw new DbException(e.getMessage());
@@ -68,8 +66,7 @@ public class DepartmentDaoJDBC implements DepartmentDao {
             result = statement.executeQuery();
 
             while(result.next()) {
-                var department = new Department(result.getInt(1), result.getString(2));
-                departments.add(department);
+                departments.add(databaseToDepartment(result));
             }
         }
         catch(SQLException e){
@@ -80,5 +77,9 @@ public class DepartmentDaoJDBC implements DepartmentDao {
             DB.closeStatement(statement);
         }
         return departments;
+    }
+
+    private Department databaseToDepartment(ResultSet result) throws SQLException {
+        return new Department(result.getInt("Id"), result.getString("Name"));
     }
 }
