@@ -16,11 +16,11 @@ public class DB {
                 Properties props = loadProperties();
                 String url = props.getProperty("dburl");
                 conn = DriverManager.getConnection(url, props);
+                System.out.println("Connected to DataBase!!");
             }
         } catch (SQLException e){
             throw new DbException(e.getMessage());
         }
-
         return conn;
     }
 
@@ -34,6 +34,7 @@ public class DB {
         catch (SQLException e){
             throw new DbException(e.getMessage());
         }
+        System.out.println("Connection closed!!");
     }
 
     public static void closeStatement(Statement st){

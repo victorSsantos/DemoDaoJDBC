@@ -1,18 +1,30 @@
 package application;
 
-import model.entities.Department;
-import model.entities.Seller;
-
-import java.util.Date;
+import model.dao.DaoFactory;
+import model.dao.interfaces.DepartmentDao;
+import model.dao.interfaces.SellerDao;
 
 public class Program {
 
     public static void main(String[] args) {
 
-        Department obj = new Department(1,"Books");
+        SellerDao sellerDao = DaoFactory.createSellerDao();
+        System.out.println();
+        System.out.println("############# SELLERS ################");
+        System.out.println("Find By ID : ");
+        System.out.println(sellerDao.findById(3));
+        System.out.println("Find All :");
+        sellerDao.findAll().forEach(System.out::println);
 
-        Seller seller = new Seller(21, "Bob", "bob@gmail.com", new Date(), 3000.0, obj);
+        System.out.println();
+        System.out.println("############# DEPARTMENTS ############");
+        DepartmentDao departmentDao = DaoFactory.createDepartmentDao();
+        System.out.println("Find By ID :");
+        System.out.println(departmentDao.findById(3));
+        System.out.println("Find All :");
+        departmentDao.findAll().forEach(System.out::println);
 
-        System.out.println(seller);
+        System.out.println();
+        DaoFactory.closeConnection();
     }
 }
