@@ -25,9 +25,10 @@ public class SellerDaoJDBC implements SellerDao {
         PreparedStatement statement = null;
 
         try{
+
             statement = connection.prepareStatement(
                     "INSERT INTO seller (Name, Email, BirthDate, BaseSalary, DepartmentId) " +
-                    "VALUES (?, ?, ?, ?, ?)");
+                    "VALUES (?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
 
             statement.setString(1, obj.getName());
             statement.setString(2, obj.getEmail());
@@ -37,7 +38,7 @@ public class SellerDaoJDBC implements SellerDao {
 
             var rowsAffected = statement.executeUpdate();
             if(rowsAffected > 0){
-                var result = statement.getGeneratedKeys();
+                ResultSet result = statement.getGeneratedKeys();
                 if(result.next())
                     obj.setId(result.getInt(1));
             }
@@ -55,41 +56,79 @@ public class SellerDaoJDBC implements SellerDao {
 
     @Override
     public void update(Seller obj) {
+        PreparedStatement statement = null;
 
+        try{
+            statement = connection.prepareStatement(
+                    "UPDATE seller " +
+                    "SET Name = ?, Email = ?, BirthDate = ?, BaseSalary = ?, DepartmentId = ? " +
+                    "WHERE Id = ? ");
+
+            statement.setString(1, obj.getName());
+            statement.setString(2, obj.getEmail());
+            statement.setDate(3, new Date(obj.getBirthDate().getTime()));
+            statement.setDouble(4, obj.getBaseSalary());
+            statement.setInt(5, obj.getDepartment().getId());
+            statement.setInt(6, obj.getId());
+
+            System.out.println(statement.executeUpdate() + " row(s) affected!");
+        }
+        catch (SQLException e){
+            throw new DbException(e.getMessage());
+        }
+        finally {
+            DB.closeStatement(statement);
+        }
     }
 
     @Override
     public void deleteById(Integer id) {
+        PreparedStatement statement = null;
 
+        try{
+            statement = connection.prepareStatement("DELETE FROM seller WHERE iD = ?");
+            statement.setInt(1, id);
+            System.out.println(statement.executeUpdate() + " row(s) affected!");
+        }
+        catch (SQLException e){
+            throw new DbException(e.getMessage());
+        }
+        finally {
+            DB.closeStatement(statement);
+        }
     }
 
     @Override
     public List<Seller> findAll(){
-        return find(null);
+        return find(null,null);
     }
 
     @Override
     public Seller findById(Integer id) {
-        return find(" WHERE seller.Id = " + id).getFirst();
+        return find("seller.Id",id).getFirst();
     }
 
     @Override
     public List<Seller> findByDepartment(Department department) {
-        return find(" WHERE seller.DepartmentId = " + department.getId());
+        return find("seller.DepartmentId",department.getId());
     }
 
-    private List<Seller> find(String whereClause) {
+    private List<Seller> find(String key, Integer value) {
         List<Seller> sellers = new ArrayList<>();
         Statement statement = null;
         ResultSet result = null;
+        String whereClause = null;
 
         try{
-            String findAllQuery =
+            String query =
                     "SELECT seller.*, department.Name as DepName FROM seller " +
                     "LEFT JOIN department ON seller.DepartmentId = department.Id";
 
+            if(key!=null && value!=null)
+                whereClause = " WHERE " + key + " = " + value;
+
             statement = connection.createStatement();
-            result = statement.executeQuery(whereClause!=null ? findAllQuery+whereClause : findAllQuery);
+            result = statement.executeQuery(whereClause!=null ? query+whereClause : query);
             Map<Integer, Department> mapDepartment = new HashMap<>();
 
             while(result.next()) {
