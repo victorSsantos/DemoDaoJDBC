@@ -1,8 +1,8 @@
-package model.dao.implementations;
+package dao.impl;
 
-import db.DB;
-import db.DbException;
-import model.dao.interfaces.SellerDao;
+import config.db.DB;
+import config.db.exceptions.DbException;
+import dao.SellerDao;
 import model.entities.Department;
 import model.entities.Seller;
 
@@ -22,7 +22,35 @@ public class SellerDaoJDBC implements SellerDao {
 
     @Override
     public void insert(Seller obj) {
+        PreparedStatement statement = null;
 
+        try{
+            statement = connection.prepareStatement(
+                    "INSERT INTO seller (Name, Email, BirthDate, BaseSalary, DepartmentId) " +
+                    "VALUES (?, ?, ?, ?, ?)");
+
+            statement.setString(1, obj.getName());
+            statement.setString(2, obj.getEmail());
+            statement.setDate(3, new Date(obj.getBirthDate().getTime()));
+            statement.setDouble(4, obj.getBaseSalary());
+            statement.setInt(5, obj.getDepartment().getId());
+
+            var rowsAffected = statement.executeUpdate();
+            if(rowsAffected > 0){
+                var result = statement.getGeneratedKeys();
+                if(result.next())
+                    obj.setId(result.getInt(1));
+            }
+            else {
+                throw new DbException("Unexpected error! No rows affected!");
+            }
+        }
+        catch (SQLException e){
+            throw new DbException(e.getMessage());
+        }
+        finally {
+            DB.closeStatement(statement);
+        }
     }
 
     @Override
@@ -52,16 +80,16 @@ public class SellerDaoJDBC implements SellerDao {
 
     private List<Seller> find(String whereClause) {
         List<Seller> sellers = new ArrayList<>();
-        PreparedStatement statement = null;
+        Statement statement = null;
         ResultSet result = null;
 
         try{
             String findAllQuery =
-                    "SELECT seller.* , department.Name as DepName FROM seller " +
+                    "SELECT seller.*, department.Name as DepName FROM seller " +
                     "LEFT JOIN department ON seller.DepartmentId = department.Id";
 
-            statement = connection.prepareStatement(whereClause!=null ? findAllQuery+whereClause : findAllQuery);
-            result = statement.executeQuery();
+            statement = connection.createStatement();
+            result = statement.executeQuery(whereClause!=null ? findAllQuery+whereClause : findAllQuery);
             Map<Integer, Department> mapDepartment = new HashMap<>();
 
             while(result.next()) {
@@ -71,7 +99,15 @@ public class SellerDaoJDBC implements SellerDao {
                     department = new Department(result.getInt("DepartmentId"), result.getString("DepName"));
                     mapDepartment.put(result.getInt("DepartmentId"), department);
                 }
-                sellers.add(databaseToSeller(result, department));
+
+                sellers.add(
+                        new Seller(
+                        result.getInt("Id"),
+                        result.getString("Name"),
+                        result.getString("Email"),
+                        result.getDate("BirthDate"),
+                        result.getDouble("BaseSalary"),
+                        department));
             }
         }
         catch(SQLException e){
@@ -82,15 +118,5 @@ public class SellerDaoJDBC implements SellerDao {
             DB.closeStatement(statement);
         }
         return sellers;
-    }
-
-    private Seller databaseToSeller(ResultSet result, Department department ) throws SQLException {
-        return new Seller(
-                result.getInt("Id"),
-                result.getString("Name"),
-                result.getString("Email"),
-                result.getDate("BirthDate"),
-                result.getDouble("BaseSalary"),
-                department);
     }
 }

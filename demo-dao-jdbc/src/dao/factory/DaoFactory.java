@@ -1,10 +1,10 @@
-package model.dao;
+package dao.factory;
 
-import db.DB;
-import model.dao.implementations.DepartmentDaoJDBC;
-import model.dao.implementations.SellerDaoJDBC;
-import model.dao.interfaces.DepartmentDao;
-import model.dao.interfaces.SellerDao;
+import config.db.DB;
+import dao.DepartmentDao;
+import dao.SellerDao;
+import dao.impl.DepartmentDaoJDBC;
+import dao.impl.SellerDaoJDBC;
 
 public class DaoFactory {
 

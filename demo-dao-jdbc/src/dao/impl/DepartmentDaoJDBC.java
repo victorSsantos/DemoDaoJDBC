@@ -1,8 +1,8 @@
-package model.dao.implementations;
+package dao.impl;
 
-import db.DB;
-import db.DbException;
-import model.dao.interfaces.DepartmentDao;
+import config.db.DB;
+import config.db.exceptions.DbException;
+import dao.DepartmentDao;
 import model.entities.Department;
 
 import java.sql.*;

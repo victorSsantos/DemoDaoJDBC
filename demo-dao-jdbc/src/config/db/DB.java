@@ -1,4 +1,6 @@
-package db;
+package config.db;
+
+import config.db.exceptions.DbException;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -57,7 +59,7 @@ public class DB {
 
     private static Properties loadProperties() {
 
-        try(FileInputStream fs = new FileInputStream("db.properties")){
+        try(FileInputStream fs = new FileInputStream("src/config/db/db.properties")){
             Properties props = new Properties();
             props.load(fs);
             return props;
